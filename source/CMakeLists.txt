@@ -41,12 +41,11 @@ set(SOURCE_FILES
         Encryptor.cpp
         FileSystem.cpp
         Util.cpp
-	BasicExamples.cpp
-        )
+		BasicExamples.cpp
+        TreeEvaluator.cpp
+		Client.cpp)
 
 set_source_files_properties(${SOURCE_FILES} PROPERTIES LANGUAGE CXX)
 
-find_package(OpenMP REQUIRED)
 add_executable(${Project_Name} main.cpp ${SOURCE_FILES})
-target_compile_options(${Project_Name} PUBLIC ${OpenMP_CXX_FLAGS})
-target_link_libraries(${Project_Name} m helib ntl pthread gmp ${OpenMP_CXX_FLAGS})
+target_link_libraries(${Project_Name} m helib ntl pthread gmp)
