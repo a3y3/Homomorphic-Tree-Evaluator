@@ -14,6 +14,9 @@ public:
     static helib::Ctxt evaluate_decision_tree(helib::Ctxt input_vector);
 
     static helib::Ctxt calculate_result(helib::Ctxt decisions[], helib::Ctxt leaf_nodes[], helib:: Ctxt ctxt_1);
+
+    static helib::Ctxt compareCtxt(helib::Ctxt xCtxt, helib::Ctxt yCtxt);
+
 };
 
 
