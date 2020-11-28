@@ -51,21 +51,14 @@ helib::Ctxt TreeEvaluator::getCtxt(int i, helib::Context &context, helib::PubKey
         (&pubkey)->Encrypt(mask, ptxt_mask);
         return mask;
 
-    } else if(i == 1){
-        // Create a Carry
-        helib::Ptxt<helib::BGV> ptxt_carry(context);
-        helib::Ctxt carry = helib::Ctxt(pubkey);
-        // ptxt_carry[0] = 1;
-        (&pubkey)->Encrypt(carry, ptxt_carry);
-        return carry;
-        // TreeEvaluator::carry = ctxt_carry;
-    } else if(i == 2){
-        // Create a Sum
-        helib::Ptxt<helib::BGV> ptxt_sum(context);
-        helib::Ctxt sum = helib::Ctxt(pubkey);
-        // ptxt_sum[0] = 1;
-        (&pubkey)->Encrypt(sum, ptxt_sum);
-        return sum;
+    } else if(i == 1 || i == 2){
+        // Create a ciphertext for carry/sum.
+        helib::Ptxt<helib::BGV> ptxt(context);
+        helib::Ctxt ctxt = helib::Ctxt(pubkey);
+
+        (&pubkey)->Encrypt(ctxt, ptxt);
+        return ctxt;
+    } 
         // TreeEvaluator::sum = ctxt_sum;
     } else if(i == 3){
         int x[16];        
