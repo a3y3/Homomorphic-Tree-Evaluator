@@ -60,7 +60,7 @@ helib::Ctxt TreeEvaluator::getCtxt(int i, helib::Context &context, helib::PubKey
         return ctxt;
     } 
         // TreeEvaluator::sum = ctxt_sum;
-    } else if(i == 3){
+    else if(i == 3){
         int x[16];        
         getBin(30, x);
 
