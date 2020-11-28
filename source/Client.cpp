@@ -7,7 +7,6 @@
 
 void Client::main() {
     COED::Encryptor encryptor = Client::createEncryptor();
-    helib::PubKey *public_key = encryptor.getPublicKey();
 
     helib::Ctxt ctxt_result = Client::send_input_vector(encryptor);
 
@@ -73,4 +72,3 @@ COED::Encryptor Client::createEncryptor() {
     COED::Util::info("Finished creating encryptor.");
     return encryptor;
 }
-
