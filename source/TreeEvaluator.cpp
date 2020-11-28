@@ -114,9 +114,6 @@ helib::Ctxt TreeEvaluator::evaluate_decision_tree(helib::Ctxt input_vector, heli
 
      // TODO this should be a function call that returns encrypted leaf nodes.
     // helib::Ctxt ctxt_1 = helib::Ctxt(helib::PubKey()); // TODO this should be an encryption of 1.
-    
-    helib::Ctxt xCtxt = TreeEvaluator::getCtxt(3, context, pubkey, 30);
-    helib::Ctxt yCtxt = TreeEvaluator::getCtxt(4, context, pubkey, -31);
 
     // return TreeEvaluator::compareCtxt(xCtxt, yCtxt, context, pubkey);
     return leaf_nodes[2];
