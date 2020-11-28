@@ -10,10 +10,13 @@ void Client::main() {
 
     helib::Ctxt ctxt_result = Client::send_input_vector(encryptor);
 
-    Client::print_result(ctxt_result, encryptor);
+    debugN(encryptor, ctxt_result, ">> Result :", 16);
+    // debugN(encryptor, ctxt_test, ">> Test :", 16);
 }
 
-helib::Ctxt Client::send_input_vector(const COED::Encryptor &encryptor) {
+
+helib::Ctxt Client::send_input_vector(COED::Encryptor &encryptor) {
+
     helib::Ptxt<helib::BGV> ptxt_input_vector(*(encryptor.getContext()));
     helib::Ctxt ctxt_input_vector(*(encryptor.getPublicKey()));
     ptxt_input_vector[0] = 10;
@@ -22,9 +25,13 @@ helib::Ctxt Client::send_input_vector(const COED::Encryptor &encryptor) {
     ptxt_input_vector[3] = 15;
 
     encryptor.getPublicKey()->Encrypt(ctxt_input_vector, ptxt_input_vector);
+    Client::print_result(ctxt_input_vector, encryptor);
 
-    return TreeEvaluator::evaluate_decision_tree(ctxt_input_vector);
+    helib::Ctxt ctxt_result = TreeEvaluator::evaluate_decision_tree(ctxt_input_vector, *(encryptor.getPublicKey()), *encryptor.getContext());
+    // debugN(encryptor, ctxt_result, ">> Result :", 1);
+    return ctxt_result;
 }
+
 
 void Client::print_result(const helib::Ctxt &result, const COED::Encryptor &encryptor) {
     std::vector<long> ptxt_result(encryptor.getEncryptedArray()->size());
@@ -32,8 +39,24 @@ void Client::print_result(const helib::Ctxt &result, const COED::Encryptor &encr
     std::cout << "Result: " << ptxt_result[0] << std::endl;
 }
 
+
+void Client::debugN(COED::Encryptor enc, helib::Ctxt ctxt, const std::string &msg, int n){
+    // std::cout<<">>>>> 3333" <<std::endl;
+    std::vector<long> plaintext(enc.getEncryptedArray()->size());
+    // decrypts the ctxt
+    
+    enc.getEncryptedArray()->decrypt(ctxt, *enc.getSecretKey(), plaintext);
+    std::cout << msg;
+    // Prints plain text values
+    
+    for (size_t i = 0; i < n; i++)    
+        std::cout << plaintext[i] << " ";
+    std::cout << std::endl;
+}
+
+
 COED::Encryptor Client::createEncryptor() {
-    int plaintext_prime_modulus = 53;
+    int plaintext_prime_modulus = 2;
     int phiM = 2665;
     int lifting = 1;
     int numOfBitsOfModulusChain = 512;
@@ -49,4 +72,3 @@ COED::Encryptor Client::createEncryptor() {
     COED::Util::info("Finished creating encryptor.");
     return encryptor;
 }
-
