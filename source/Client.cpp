@@ -11,10 +11,16 @@ void Client::main() {
     helib::Ctxt ctxt_result = Client::send_input_vector(encryptor);
 
     debugN(encryptor, ctxt_result, ">> Result :", 16);
-    // debugN(encryptor, ctxt_test, ">> Test :", 16);
 }
 
-
+/**
+ * Creates an input vector for the client and sends it to the server.
+ * For demonstration purposes, currently this function only calls the server's method since they're both on the same
+ * machine. However, this  method can be just as easily changed to pass the input vector over a network.
+ *
+ * @param encryptor an address of the encryptor object used to encrypt/decrypt a ciphertext.
+ * @return The value that the server sent.
+ */
 helib::Ctxt Client::send_input_vector(COED::Encryptor &encryptor) {
 
     helib::Ptxt<helib::BGV> ptxt_input_vector(*(encryptor.getContext()));
@@ -25,36 +31,37 @@ helib::Ctxt Client::send_input_vector(COED::Encryptor &encryptor) {
     ptxt_input_vector[3] = 15;
 
     encryptor.getPublicKey()->Encrypt(ctxt_input_vector, ptxt_input_vector);
-    Client::print_result(ctxt_input_vector, encryptor);
 
-    helib::Ctxt ctxt_result = TreeEvaluator::evaluate_decision_tree(ctxt_input_vector, *(encryptor.getPublicKey()), *encryptor.getContext());
-    // debugN(encryptor, ctxt_result, ">> Result :", 1);
-    return ctxt_result;
+    return TreeEvaluator::evaluate_decision_tree(ctxt_input_vector, *(encryptor.getPublicKey()),
+                                                 *encryptor.getContext());
 }
 
-
-void Client::print_result(const helib::Ctxt &result, const COED::Encryptor &encryptor) {
-    std::vector<long> ptxt_result(encryptor.getEncryptedArray()->size());
-    encryptor.getEncryptedArray()->decrypt(result, *encryptor.getSecretKey(), ptxt_result);
-    std::cout << "Result: " << ptxt_result[0] << std::endl;
-}
-
-
-void Client::debugN(COED::Encryptor enc, helib::Ctxt ctxt, const std::string &msg, int n){
+/**
+ * Decrypts a ciphertext and prints the output. Use only for debugging/demonstrations.
+ * @param enc A COED::Encryptor object that can encrypt and decrypt ciphertexts.
+ * @param ctxt The ciphertext to be decrypted and printed.
+ * @param msg An optional message that is prepended to the output.
+ * @param n The number of 'slots' of the ciphertext to be printed.
+ *
+ */
+void Client::debugN(const COED::Encryptor &enc, const helib::Ctxt &ctxt, const std::string &msg, int n) {
     // std::cout<<">>>>> 3333" <<std::endl;
     std::vector<long> plaintext(enc.getEncryptedArray()->size());
     // decrypts the ctxt
-    
+
     enc.getEncryptedArray()->decrypt(ctxt, *enc.getSecretKey(), plaintext);
     std::cout << msg;
     // Prints plain text values
-    
-    for (size_t i = 0; i < n; i++)    
+
+    for (size_t i = 0; i < n; i++)
         std::cout << plaintext[i] << " ";
     std::cout << std::endl;
 }
 
-
+/**
+ * Creates an encryptor object can be used to either encrypt or decrypt a plaintext.
+ * @return the created object.
+ */
 COED::Encryptor Client::createEncryptor() {
     int plaintext_prime_modulus = 2;
     int phiM = 2665;
