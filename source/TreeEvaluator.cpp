@@ -96,7 +96,7 @@ void TreeEvaluator::getCtxtList(helib::Context &context, helib::PubKey &pubkey, 
  * @param input_vector encrypted input vector.
  * @return an encrypted result obtained after the evaluation of the tree.
  */
-helib::Ctxt TreeEvaluator::evaluate_decision_tree(helib::Ctxt input_vector, helib::PubKey &pubkey, helib::Context &context) {
+helib::Ctxt TreeEvaluator::evaluate_decision_tree(helib::Ctxt input_vector, helib::PubKey pubkey, helib::Context context) {
 
     helib::Ctxt decisions[] = {}; // TODO this should be a function call to secComp that returns an array of encrypted decisions.
 
