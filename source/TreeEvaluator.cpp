@@ -130,8 +130,8 @@ helib::Ctxt TreeEvaluator::evaluate_decision_tree(helib::Ctxt input_vector[], he
     helib::totalSums(ea, ctxt_1);
 
     helib::Ctxt decisions[3] = {helib::Ctxt(pubkey), helib::Ctxt(pubkey), helib::Ctxt(pubkey)};
-    int size = sizeof(thresholds)/sizeof(thresholds[0]);
-    for(int i = 0; i < size; i++) {
+    int size = sizeof(thresholds) / sizeof(thresholds[0]);
+    for (int i = 0; i < size; i++) {
         decisions[i] = TreeEvaluator::compareCtxt(input_vector[i], thresholds[i], context, pubkey);
     }
 
@@ -148,7 +148,8 @@ helib::Ctxt TreeEvaluator::evaluate_decision_tree(helib::Ctxt input_vector[], he
  * @param pubkey Address of the client's public key.
  * @return An encryption of x<y.
  */
-helib::Ctxt TreeEvaluator::compareCtxt(helib::Ctxt xCtxt, helib::Ctxt yCtxt, helib::Context &context, helib::PubKey &pubkey){
+helib::Ctxt
+TreeEvaluator::compareCtxt(helib::Ctxt xCtxt, helib::Ctxt yCtxt, helib::Context &context, helib::PubKey &pubkey) {
 
     const int bitLength = 16;
 
@@ -156,7 +157,7 @@ helib::Ctxt TreeEvaluator::compareCtxt(helib::Ctxt xCtxt, helib::Ctxt yCtxt, hel
     helib::Ctxt carry = TreeEvaluator::getCtxt(1, context, pubkey, 0);
     helib::Ctxt sum = TreeEvaluator::getCtxt(2, context, pubkey, 0);
 
-    for (int i=0; i<bitLength; i++){
+    for (int i = 0; i < bitLength; i++) {
 
         sum = xCtxt;
         sum += yCtxt;
@@ -186,7 +187,8 @@ helib::Ctxt TreeEvaluator::compareCtxt(helib::Ctxt xCtxt, helib::Ctxt yCtxt, hel
  * @param decisions an array of encrypted decisions. Each element in this array is a ciphertext obtained from SecComp.
  * @return a single ciphertext that is the result of evaluation of the tree.
  */
-helib::Ctxt TreeEvaluator::calculate_result(helib::Ctxt decisions[], helib::Ctxt leaf_nodes[], const helib::Ctxt& ctxt_1) {
+helib::Ctxt
+TreeEvaluator::calculate_result(helib::Ctxt decisions[], helib::Ctxt leaf_nodes[], const helib::Ctxt &ctxt_1) {
     // calculate decision[0]*(decision[2]*leaf_nodes[0]) (call it term0)
     helib::Ctxt temp(decisions[2]);
     temp.multiplyBy(leaf_nodes[0]);

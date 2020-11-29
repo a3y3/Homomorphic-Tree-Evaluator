@@ -12,7 +12,7 @@ void Client::main() {
 
     debugN(encryptor, ctxt_result, ">> Result :", 16);
 
-    std::cout<<">> Decimal result: " << get_decimal_from_binary(encryptor, ctxt_result)<<"\n";
+    std::cout << ">> Decimal result: " << get_decimal_from_binary(encryptor, ctxt_result) << "\n";
 }
 
 /**
@@ -27,7 +27,14 @@ helib::Ctxt Client::send_input_vector(COED::Encryptor &encryptor) {
     helib::Context *context = encryptor.getContext();
     helib::PubKey *pubKey = encryptor.getPublicKey();
 
-    int inputs[3] = {120,3,18 };
+    int inputs[3];
+    std::cout << "Enter 3 feature vectors. Hit enter after each." << std::endl;
+    for (int &input : inputs) {
+        std::cin >> input;
+    }
+
+    std::cout << "Calculating result..." << std::endl;
+
     helib::Ctxt ctxt_input_vector[3] = {helib::Ctxt(*pubKey), helib::Ctxt(*pubKey), helib::Ctxt(*pubKey)};
     TreeEvaluator::getCtxtList(*context, *pubKey, ctxt_input_vector, inputs);
 
@@ -81,14 +88,20 @@ COED::Encryptor Client::createEncryptor() {
     return encryptor;
 }
 
-double Client::get_decimal_from_binary(const COED::Encryptor &enc, const helib::Ctxt& result) {
+/**
+ * Given a ciphertext representing some number in binary format, decrypts it and calculates the decimal result.
+ * @param enc the encryptor object used to decrypt the ciphertext.
+ * @param result The evaluation result sent by the server.
+ * @return A decimal representation of the result.
+ */
+double Client::get_decimal_from_binary(const COED::Encryptor &enc, const helib::Ctxt &result) {
     std::vector<long> plaintext(enc.getEncryptedArray()->size());
     enc.getEncryptedArray()->decrypt(result, *enc.getSecretKey(), plaintext);
     double decimal_result = 0;
 
     for (int i = 0; i < 16; ++i) {
-        double power = pow(2, 15-i);
-        decimal_result += power*plaintext[i];
+        double power = pow(2, 15 - i);
+        decimal_result += power * plaintext[i];
     }
     return decimal_result;
 
