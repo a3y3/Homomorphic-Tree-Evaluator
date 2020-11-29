@@ -16,12 +16,12 @@ public:
 private:
     static COED::Encryptor createEncryptor();
 
-    static void print_result(const helib::Ctxt& result, const COED::Encryptor& encryptor);
-
     static helib::Ctxt send_input_vector(COED::Encryptor &encryptor);
 
+    static double get_decimal_from_binary(const COED::Encryptor &enc, const helib::Ctxt &result);
+
 public:
-    static void debugN(COED::Encryptor enc, helib::Ctxt ctxt, const std::string &msg, int n);
+    static void debugN(const COED::Encryptor &enc, const helib::Ctxt &ctxt, const std::string &msg, int n);
 };
 
 

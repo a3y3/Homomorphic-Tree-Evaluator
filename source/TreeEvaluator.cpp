@@ -4,86 +4,99 @@
 
 #include "TreeEvaluator.h"
 
-
-int* getBin(int x, int* bin){
-
+/**
+ * Given an x, stores the binary representation of x in bin. Not that bin[0] contains the MSB and bin[n] contains the
+ * LSB of the binary number.
+ * @param x An input number whose binary representation is to be found.
+ * @param bin The array that stores the binary representation.
+ */
+void getBin(int x, int *bin) {
     int flag = 0;
-    if(x<0){
+    if (x < 0) {
         flag = 1;
         x *= -1;
     }
 
-    for(int i=15; i>=0; i--){
-        bin[i] = x%2;
-        x/=2;
+    for (int i = 15; i >= 0; i--) {
+        bin[i] = x % 2;
+        x /= 2;
     }
 
     int carry = 0;
-    if(bin[15]==0){
-        carry=1;
+    if (bin[15] == 0) {
+        carry = 1;
     }
-    // std::cout<<">>>>>>Hi" ;
-    if(flag==1){
-        for(int i=14; i>=0; i--){
-            bin[i] = (1-bin[i]) + carry;
+
+    if (flag == 1) {
+        for (int i = 14; i >= 0; i--) {
+            bin[i] = (1 - bin[i]) + carry;
             carry = 0;
-            if(bin[i] > 1){
+            if (bin[i] > 1) {
                 bin[i] = 0;
                 carry = 1;
             }
         }
     }
-
-    return bin;
 }
 
-
-helib::Ctxt TreeEvaluator::getCtxt(int i, helib::Context &context, helib::PubKey &pubkey, int val){
-
+/**
+ * Depending upon the choice provided, returns one of the following ciphertexts:
+ *      1. a mask of 100...0 (used for selecting only the first slot of a ciphertext)
+ *      2. a ciphertext for storing either a sum or a carry.
+ *      3. a ciphertext that contains the binary representation of {@code val}.
+ * @param i Used as a switch. Can be either 1, 2, 3, or 4.
+ * @param context the address of the helib::context object
+ * @param pubkey the address client's public key.
+ * @param val the value which is to be encoded as binary in a ciphertext.
+ * @return the created ciphertext.
+ */
+helib::Ctxt TreeEvaluator::getCtxt(int i, helib::Context &context, helib::PubKey &pubkey, int val) {
     // Create a Mask
-    if(i == 0){
-        
+    if (i == 0) {
         helib::Ptxt<helib::BGV> ptxt_mask(context);
         helib::Ctxt mask = helib::Ctxt(pubkey);
-        
+
         ptxt_mask[0] = 1;
-        
+
         (&pubkey)->Encrypt(mask, ptxt_mask);
         return mask;
 
-    } else if(i == 1 || i == 2){
+    } else if (i == 1 || i == 2) {
         // Create a ciphertext for carry/sum.
         helib::Ptxt<helib::BGV> ptxt(context);
         helib::Ctxt ctxt = helib::Ctxt(pubkey);
 
         (&pubkey)->Encrypt(ctxt, ptxt);
         return ctxt;
-    } 
-        // TreeEvaluator::sum = ctxt_sum;
-    else {
+    } else {
         int y[16];
         getBin(val, y);
 
         helib::Ptxt<helib::BGV> yPtxt(context);
         helib::Ctxt yCtxt = helib::Ctxt(pubkey);
-        std::cout << "Bin : ";
-        for(int i = 0; i < 16; i++){
-            yPtxt[i] = y[i];
-            std::cout << y[i] <<" ";
+
+        for (int index = 0; index < 16; index++) {
+            yPtxt[index] = y[index];
         }
-        std::cout << std::endl;
+
         (&pubkey)->Encrypt(yCtxt, yPtxt);
         return yCtxt;
     }
 }
 
-
-void TreeEvaluator::getCtxtList(helib::Context &context, helib::PubKey &pubkey, helib::Ctxt* nodes, int* val){
-
+/**
+ * Given an array of values (in @code *val), this function stores the ciphertexts formed from the array elements in
+ * {@code *nodes}.
+ *
+ * @param context An object of helib::context
+ * @param pubkey the address of the client's public key.
+ * @param nodes An array of ciphertext which will store the encrypted array elements of {@code *val}
+ * @param val An array of integer values, which is to be stored in binary form in a ciphertext.
+ */
+void TreeEvaluator::getCtxtList(helib::Context &context, helib::PubKey &pubkey, helib::Ctxt *nodes, int *val) {
     nodes[0] = TreeEvaluator::getCtxt(3, context, pubkey, val[0]);
     nodes[1] = TreeEvaluator::getCtxt(3, context, pubkey, val[1]);
     nodes[2] = TreeEvaluator::getCtxt(3, context, pubkey, val[2]);
-    
 }
 
 
@@ -117,17 +130,26 @@ helib::Ctxt TreeEvaluator::evaluate_decision_tree(helib::Ctxt input_vector[], he
     helib::totalSums(ea, ctxt_1);
 
     helib::Ctxt decisions[3] = {helib::Ctxt(pubkey), helib::Ctxt(pubkey), helib::Ctxt(pubkey)};
-    int size = sizeof(thresholds)/sizeof(thresholds[0]);
-    for(int i = 0; i < size; i++) {
+    int size = sizeof(thresholds) / sizeof(thresholds[0]);
+    for (int i = 0; i < size; i++) {
         decisions[i] = TreeEvaluator::compareCtxt(input_vector[i], thresholds[i], context, pubkey);
     }
 
-//    return decisions[1];
-     return TreeEvaluator::calculate_result(decisions, leaf_nodes, ctxt_1);
+    return TreeEvaluator::calculate_result(decisions, leaf_nodes, ctxt_1);
 }
 
-
-helib::Ctxt TreeEvaluator::compareCtxt(helib::Ctxt xCtxt, helib::Ctxt yCtxt, helib::Context &context, helib::PubKey &pubkey){
+/**
+ * Compares two ciphertexts and returns the result.
+ * This method compares using 2's complement. If x<y, x-y has '1' as an MSB. The method subtracts the numbers this
+ * way, and returns a ciphertext such that it has all 1s if x<y, and all 0s otherwise.
+ * @param xCtxt The first ciphertext to be compared.
+ * @param yCtxt The second ciphertext to be compared.
+ * @param context An address of helib::context object.
+ * @param pubkey Address of the client's public key.
+ * @return An encryption of x<y.
+ */
+helib::Ctxt
+TreeEvaluator::compareCtxt(helib::Ctxt xCtxt, helib::Ctxt yCtxt, helib::Context &context, helib::PubKey &pubkey) {
 
     const int bitLength = 16;
 
@@ -135,8 +157,8 @@ helib::Ctxt TreeEvaluator::compareCtxt(helib::Ctxt xCtxt, helib::Ctxt yCtxt, hel
     helib::Ctxt carry = TreeEvaluator::getCtxt(1, context, pubkey, 0);
     helib::Ctxt sum = TreeEvaluator::getCtxt(2, context, pubkey, 0);
 
-    for (int i=0; i<bitLength; i++){
-         
+    for (int i = 0; i < bitLength; i++) {
+
         sum = xCtxt;
         sum += yCtxt;
 
@@ -165,7 +187,8 @@ helib::Ctxt TreeEvaluator::compareCtxt(helib::Ctxt xCtxt, helib::Ctxt yCtxt, hel
  * @param decisions an array of encrypted decisions. Each element in this array is a ciphertext obtained from SecComp.
  * @return a single ciphertext that is the result of evaluation of the tree.
  */
-helib::Ctxt TreeEvaluator::calculate_result(helib::Ctxt decisions[], helib::Ctxt leaf_nodes[], helib:: Ctxt ctxt_1) {
+helib::Ctxt
+TreeEvaluator::calculate_result(helib::Ctxt decisions[], helib::Ctxt leaf_nodes[], const helib::Ctxt &ctxt_1) {
     // calculate decision[0]*(decision[2]*leaf_nodes[0]) (call it term0)
     helib::Ctxt temp(decisions[2]);
     temp.multiplyBy(leaf_nodes[0]);
@@ -178,15 +201,15 @@ helib::Ctxt TreeEvaluator::calculate_result(helib::Ctxt decisions[], helib::Ctxt
     one_minus_ctxt_0.addCtxt(decisions[0], true);
     helib::Ctxt term1(one_minus_ctxt_0); // the only point of this variable is for readability's sake
 
-    // calculate (1-decision[1])*leaf_nodes[1] (call it term2)
+    // calculate (1-decision[1])*leaf_nodes[2] (call it term2)
     helib::Ctxt one_minus_ctxt_1(ctxt_1);
     one_minus_ctxt_1.addCtxt(decisions[1], true);
-    one_minus_ctxt_1.multiplyBy(leaf_nodes[1]);
+    one_minus_ctxt_1.multiplyBy(leaf_nodes[2]);
     helib::Ctxt term2(one_minus_ctxt_1);
 
-    // calculate decision[1]*leaf_nodes[2] (call it term3)
+    // calculate decision[1]*leaf_nodes[1] (call it term3)
     helib::Ctxt term3(decisions[1]);
-    term3.multiplyBy(leaf_nodes[2]);
+    term3.multiplyBy(leaf_nodes[1]);
 
 
     // calculate term2+term3 (call it term4)
