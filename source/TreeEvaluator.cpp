@@ -75,12 +75,9 @@ helib::Ctxt TreeEvaluator::getCtxt(int i, helib::Context &context, helib::PubKey
         helib::Ptxt<helib::BGV> yPtxt(context);
         helib::Ctxt yCtxt = helib::Ctxt(pubkey);
 
-        std::cout << "Bin : ";
-        for (int i = 0; i < 16; i++) {
-            yPtxt[i] = y[i];
-            std::cout << y[i] << " ";
+        for (int index = 0; index < 16; index++) {
+            yPtxt[index] = y[index];
         }
-        std::cout << std::endl;
 
         (&pubkey)->Encrypt(yCtxt, yPtxt);
         return yCtxt;
@@ -189,7 +186,7 @@ helib::Ctxt TreeEvaluator::compareCtxt(helib::Ctxt xCtxt, helib::Ctxt yCtxt, hel
  * @param decisions an array of encrypted decisions. Each element in this array is a ciphertext obtained from SecComp.
  * @return a single ciphertext that is the result of evaluation of the tree.
  */
-helib::Ctxt TreeEvaluator::calculate_result(helib::Ctxt decisions[], helib::Ctxt leaf_nodes[], helib::Ctxt ctxt_1) {
+helib::Ctxt TreeEvaluator::calculate_result(helib::Ctxt decisions[], helib::Ctxt leaf_nodes[], const helib::Ctxt& ctxt_1) {
     // calculate decision[0]*(decision[2]*leaf_nodes[0]) (call it term0)
     helib::Ctxt temp(decisions[2]);
     temp.multiplyBy(leaf_nodes[0]);
@@ -202,15 +199,15 @@ helib::Ctxt TreeEvaluator::calculate_result(helib::Ctxt decisions[], helib::Ctxt
     one_minus_ctxt_0.addCtxt(decisions[0], true);
     helib::Ctxt term1(one_minus_ctxt_0); // the only point of this variable is for readability's sake
 
-    // calculate (1-decision[1])*leaf_nodes[1] (call it term2)
+    // calculate (1-decision[1])*leaf_nodes[2] (call it term2)
     helib::Ctxt one_minus_ctxt_1(ctxt_1);
     one_minus_ctxt_1.addCtxt(decisions[1], true);
-    one_minus_ctxt_1.multiplyBy(leaf_nodes[1]);
+    one_minus_ctxt_1.multiplyBy(leaf_nodes[2]);
     helib::Ctxt term2(one_minus_ctxt_1);
 
-    // calculate decision[1]*leaf_nodes[2] (call it term3)
+    // calculate decision[1]*leaf_nodes[1] (call it term3)
     helib::Ctxt term3(decisions[1]);
-    term3.multiplyBy(leaf_nodes[2]);
+    term3.multiplyBy(leaf_nodes[1]);
 
 
     // calculate term2+term3 (call it term4)
