@@ -10,18 +10,20 @@ void Client::main() {
 
     helib::Ctxt ctxt_result = Client::send_input_vector(encryptor);
 
-     debugN(encryptor, ctxt_result, ">> Result :", 16);
+    debugN(encryptor, ctxt_result, ">> Result :", 16);
 }
 
 
 helib::Ctxt Client::send_input_vector(COED::Encryptor &encryptor) {
-
+    helib::Context *context = encryptor.getContext();
+    helib::PubKey *pubKey = encryptor.getPublicKey();
+    
     int inputs[3] = {10,23,18 };
-    helib::Ctxt ctxt_input_vector[3] = {helib::Ctxt(*(encryptor.getPublicKey())), helib::Ctxt(*(encryptor.getPublicKey())), helib::Ctxt(*(encryptor.getPublicKey()))};
-    TreeEvaluator::getCtxtList(*encryptor.getContext(), *(encryptor.getPublicKey()), ctxt_input_vector, inputs);
+    helib::Ctxt ctxt_input_vector[3] = {helib::Ctxt(*pubKey), helib::Ctxt(*pubKey), helib::Ctxt(*pubKey)};
+    TreeEvaluator::getCtxtList(*context, *pubKey, ctxt_input_vector, inputs);
 
     helib::Ctxt ctxt_result = TreeEvaluator::evaluate_decision_tree(ctxt_input_vector, *(encryptor.getPublicKey()), *encryptor.getContext());
-    debugN(encryptor, ctxt_result, ">> Result :", 1);
+
     return ctxt_result;
 }
 
