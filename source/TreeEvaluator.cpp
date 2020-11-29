@@ -96,11 +96,8 @@ void TreeEvaluator::getCtxtList(helib::Context &context, helib::PubKey &pubkey, 
  * @param input_vector encrypted input vector.
  * @return an encrypted result obtained after the evaluation of the tree.
  */
-helib::Ctxt TreeEvaluator::evaluate_decision_tree(helib::Ctxt input_vector, helib::PubKey pubkey, helib::Context context) {
-
-    helib::Ctxt decisions[] = {}; // TODO this should be a function call to secComp that returns an array of encrypted decisions.
-
-    // Module 1: Stores ctxt versions of labels in leaf_nodes
+helib::Ctxt TreeEvaluator::evaluate_decision_tree(helib::Ctxt input_vector[], helib::PubKey &pubkey, helib::Context
+&context) {
     int leaves[3] = {10, 20, 30};
     helib::Ctxt leaf_nodes[3] = {helib::Ctxt(pubkey), helib::Ctxt(pubkey), helib::Ctxt(pubkey)};
     TreeEvaluator::getCtxtList(context, pubkey, leaf_nodes, leaves);
@@ -112,16 +109,22 @@ helib::Ctxt TreeEvaluator::evaluate_decision_tree(helib::Ctxt input_vector, heli
     helib::Ctxt thresholds[3] = {helib::Ctxt(pubkey), helib::Ctxt(pubkey), helib::Ctxt(pubkey)};
     TreeEvaluator::getCtxtList(context, pubkey, thresholds, thold);
 
-     // TODO this should be a function call that returns encrypted leaf nodes.
-    // helib::Ctxt ctxt_1 = helib::Ctxt(helib::PubKey()); // TODO this should be an encryption of 1.
+    helib::Ctxt ctxt_1(pubkey);
+    helib::Ptxt<helib::BGV> ptxt_input(context);
+    ptxt_input[0] = 1;
+    pubkey.Encrypt(ctxt_1, ptxt_input);
+    helib::EncryptedArray ea(context);
+    helib::totalSums(ea, ctxt_1);
 
-    // return TreeEvaluator::compareCtxt(xCtxt, yCtxt, context, pubkey);
-    return leaf_nodes[2];
-    // return TreeEvaluator::calculate_result(decisions, leaf_nodes, ctxt_1);
+    helib::Ctxt decisions[3] = {helib::Ctxt(pubkey), helib::Ctxt(pubkey), helib::Ctxt(pubkey)};
+    int size = sizeof(thresholds)/sizeof(thresholds[0]);
+    for(int i = 0; i < size; i++) {
+        decisions[i] = TreeEvaluator::compareCtxt(input_vector[i], thresholds[i], context, pubkey);
+    }
+
+//    return decisions[1];
+     return TreeEvaluator::calculate_result(decisions, leaf_nodes, ctxt_1);
 }
-
-
-
 
 
 helib::Ctxt TreeEvaluator::compareCtxt(helib::Ctxt xCtxt, helib::Ctxt yCtxt, helib::Context &context, helib::PubKey &pubkey){
