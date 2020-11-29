@@ -113,6 +113,8 @@ helib::Ctxt TreeEvaluator::evaluate_decision_tree(helib::Ctxt input_vector[], he
     helib::Ptxt<helib::BGV> ptxt_input(context);
     ptxt_input[0] = 1;
     pubkey.Encrypt(ctxt_1, ptxt_input);
+    helib::EncryptedArray ea(context);
+    helib::totalSums(ea, ctxt_1);
 
     helib::Ctxt decisions[3] = {helib::Ctxt(pubkey), helib::Ctxt(pubkey), helib::Ctxt(pubkey)};
     int size = sizeof(thresholds)/sizeof(thresholds[0]);
