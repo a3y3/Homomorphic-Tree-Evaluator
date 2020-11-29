@@ -38,7 +38,7 @@ int* getBin(int x, int* bin){
 }
 
 
-helib::Ctxt TreeEvaluator::getCtxt(int i, helib::Context &context, helib::PubKey &pubkey){
+helib::Ctxt TreeEvaluator::getCtxt(int i, helib::Context &context, helib::PubKey &pubkey, int val){
 
     // Create a Mask
     if(i == 0){
@@ -60,28 +60,13 @@ helib::Ctxt TreeEvaluator::getCtxt(int i, helib::Context &context, helib::PubKey
         return ctxt;
     } 
         // TreeEvaluator::sum = ctxt_sum;
-    else if(i == 3){
-        int x[16];        
-        getBin(30, x);
-
-        helib::Ptxt<helib::BGV> xPtxt(context);
-        helib::Ctxt xCtxt = helib::Ctxt(pubkey);
-        std::cout << "X: ";
-        for(int i = 0; i < 16; i++){
-            xPtxt[i] = x[i];
-            std::cout << x[i] <<" ";
-        }
-        std::cout << std::endl;
-        (&pubkey)->Encrypt(xCtxt, xPtxt);
-        return xCtxt;
-
-    } else {
+    else {
         int y[16];
-        getBin(-301, y);
+        getBin(val, y);
 
         helib::Ptxt<helib::BGV> yPtxt(context);
         helib::Ctxt yCtxt = helib::Ctxt(pubkey);
-        std::cout << "Y: ";
+        std::cout << "Bin : ";
         for(int i = 0; i < 16; i++){
             yPtxt[i] = y[i];
             std::cout << y[i] <<" ";
@@ -90,6 +75,15 @@ helib::Ctxt TreeEvaluator::getCtxt(int i, helib::Context &context, helib::PubKey
         (&pubkey)->Encrypt(yCtxt, yPtxt);
         return yCtxt;
     }
+}
+
+
+void TreeEvaluator::getCtxtList(helib::Context &context, helib::PubKey &pubkey, helib::Ctxt* nodes, int* val){
+
+    nodes[0] = TreeEvaluator::getCtxt(3, context, pubkey, val[0]);
+    nodes[1] = TreeEvaluator::getCtxt(3, context, pubkey, val[1]);
+    nodes[2] = TreeEvaluator::getCtxt(3, context, pubkey, val[2]);
+    
 }
 
 
@@ -105,25 +99,38 @@ helib::Ctxt TreeEvaluator::getCtxt(int i, helib::Context &context, helib::PubKey
 helib::Ctxt TreeEvaluator::evaluate_decision_tree(helib::Ctxt input_vector, helib::PubKey &pubkey, helib::Context &context) {
 
     helib::Ctxt decisions[] = {}; // TODO this should be a function call to secComp that returns an array of encrypted decisions.
-    helib::Ctxt leaf_nodes[] = {}; // TODO this should be a function call that returns encrypted leaf nodes.
-    // helib::Ctxt ctxt_1 = helib::Ctxt(helib::PubKey()); // TODO this should be an encryption of 1.
-    
-    helib::Ctxt xCtxt = TreeEvaluator::getCtxt(3, context, pubkey);
-    helib::Ctxt yCtxt = TreeEvaluator::getCtxt(4, context, pubkey);
 
-    return TreeEvaluator::compareCtxt(xCtxt, yCtxt, context, pubkey);
-    
+    // Module 1: Stores ctxt versions of labels in leaf_nodes
+    int leaves[3] = {10, 20, 30};
+    helib::Ctxt leaf_nodes[3] = {helib::Ctxt(pubkey), helib::Ctxt(pubkey), helib::Ctxt(pubkey)};
+    TreeEvaluator::getCtxtList(context, pubkey, leaf_nodes, leaves);
+
+    // Module 2: Stores ctxt versions of thresholds in threshold
+    // We use modified dummy node, sepal_length < 999 (always the
+    // case), instead of sepal_length > 0 
+    int thold[3] = {-27, -17, -999};
+    helib::Ctxt thresholds[3] = {helib::Ctxt(pubkey), helib::Ctxt(pubkey), helib::Ctxt(pubkey)};
+    TreeEvaluator::getCtxtList(context, pubkey, thresholds, thold);
+
+     // TODO this should be a function call that returns encrypted leaf nodes.
+    // helib::Ctxt ctxt_1 = helib::Ctxt(helib::PubKey()); // TODO this should be an encryption of 1.
+
+    // return TreeEvaluator::compareCtxt(xCtxt, yCtxt, context, pubkey);
+    return leaf_nodes[2];
     // return TreeEvaluator::calculate_result(decisions, leaf_nodes, ctxt_1);
 }
+
+
+
 
 
 helib::Ctxt TreeEvaluator::compareCtxt(helib::Ctxt xCtxt, helib::Ctxt yCtxt, helib::Context &context, helib::PubKey &pubkey){
 
     const int bitLength = 16;
 
-    helib::Ctxt mask = TreeEvaluator::getCtxt(0, context, pubkey);
-    helib::Ctxt carry = TreeEvaluator::getCtxt(1, context, pubkey);
-    helib::Ctxt sum = TreeEvaluator::getCtxt(2, context, pubkey);
+    helib::Ctxt mask = TreeEvaluator::getCtxt(0, context, pubkey, 0);
+    helib::Ctxt carry = TreeEvaluator::getCtxt(1, context, pubkey, 0);
+    helib::Ctxt sum = TreeEvaluator::getCtxt(2, context, pubkey, 0);
 
     for (int i=0; i<bitLength; i++){
          
