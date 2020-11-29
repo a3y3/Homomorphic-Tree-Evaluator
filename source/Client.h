@@ -18,6 +18,8 @@ private:
 
     static helib::Ctxt send_input_vector(COED::Encryptor &encryptor);
 
+    static double get_decimal_from_binary(const COED::Encryptor &enc, const helib::Ctxt& result);
+
 public:
     static void debugN(const COED::Encryptor& enc, const helib::Ctxt& ctxt, const std::string &msg, int n);
 };

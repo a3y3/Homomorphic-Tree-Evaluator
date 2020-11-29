@@ -11,6 +11,8 @@ void Client::main() {
     helib::Ctxt ctxt_result = Client::send_input_vector(encryptor);
 
     debugN(encryptor, ctxt_result, ">> Result :", 16);
+
+    std::cout<<">> Decimal result: " << get_decimal_from_binary(encryptor, ctxt_result)<<"\n";
 }
 
 /**
@@ -77,4 +79,17 @@ COED::Encryptor Client::createEncryptor() {
                               numOfColOfKeySwitchingMatrix);
     COED::Util::info("Finished creating encryptor.");
     return encryptor;
+}
+
+double Client::get_decimal_from_binary(const COED::Encryptor &enc, const helib::Ctxt& result) {
+    std::vector<long> plaintext(enc.getEncryptedArray()->size());
+    enc.getEncryptedArray()->decrypt(result, *enc.getSecretKey(), plaintext);
+    double decimal_result = 0;
+
+    for (int i = 0; i < 16; ++i) {
+        double power = pow(2, 15-i);
+        decimal_result += power*plaintext[i];
+    }
+    return decimal_result;
+
 }
