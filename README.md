@@ -1,5 +1,5 @@
 # Homomorphic Tree Evaluator
-The aim of this project is to implement a client/server architecture such that:
+The aim of this project is to evaluate an encrypted decision tree such that:
 - The client sends **encrypted feature vectors** to the server.
 - The server evaluates an encrypted decision tree against these feature vectors. 
 - **At no step does the server decrypt the feature vectors from the client.** No information leaks are possible, and everything is highly confidential, since the server cannot see the client's inputs, and the client cannot see the server's decision tree.
